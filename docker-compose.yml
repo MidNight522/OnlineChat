@@ -1,0 +1,54 @@
+name: java-rush-app
+
+volumes:
+  db_data:
+  uploads: {}
+
+services:
+  db:
+    image: postgres:16
+    container_name: jr-postgres
+    env_file: ./db/.env
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h 127.0.0.1 || exit 1',
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks: [internal]
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: jr-backend
+    env_file: ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+    expose: ['3001']
+    networks: [internal]
+
+  nginx:
+    image: nginx:alpine
+    container_name: jr-nginx
+    depends_on: [backend]
+    ports: ['80:80']
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./web:/var/www/site:ro
+      - uploads:/var/www/uploads:ro
+    networks: [internal]
+
+networks:
+  internal:
+    driver: bridge
