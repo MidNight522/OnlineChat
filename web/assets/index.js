@@ -1,253 +1,366 @@
-// console.log(1000);
+import {
+  fetchMessages,
+  createMessage,
+  updateMessage,
+  deleteMessage,
+} from './api/messages.js';
+import { getDateKey, formatDateSeparator } from './utils/date.js';
+import { createMessageElement } from './ui/message.js';
+import { getStoredUser } from './utils/storage.js';
+import { openConfigMenu } from './ui/configMenu.js';
+import { initChatForm } from './ui/chatForm.js';
+import { initAuthUi, initLoggedInHeader, openProfileModal } from './ui/auth.js';
+import { updateUserAvatar, deleteUserAvatar } from './api/user.js';
 
 const root = document.getElementById('root');
-const user = localStorage.getItem('user');
+
+const appContainer = document.createElement('div');
+appContainer.classList.add('chat-container');
+root.appendChild(appContainer);
+
+const storedUser = getStoredUser();
+
 let formMessageElement = null;
 let messagesWrapperDiv = null;
-let inputValue = null;
+let openedConfigMessageUuid = null;
+
+let scrollToBottomBtn = null;
+let shouldAutoScroll = true;
+
+let inputValue = '';
 let inputMessageElement = null;
+
 let messageConfigBlock = null;
 let messageConfigIsOpened = false;
 
-const initBottomFormMessage = () => {
-  formMessageElement = document.createElement('form');
-  formMessageElement.classList.add('bottom-form');
+let editingMessageUuid = null;
 
-  inputMessageElement = document.createElement('input');
-  inputMessageElement.placeholder = 'Enter your message';
-  inputMessageElement.classList.add('input-message');
-  if (inputValue) inputMessageElement.value = inputValue;
+let profileModalOpen = false;
 
-  inputMessageElement.addEventListener('input', function (event) {
-    const value = event.target.value;
-    inputValue = value;
-  });
+// ---------- helpers ----------
+const ensureMessagesWrapper = () => {
+  if (messagesWrapperDiv) return;
 
-  const button = document.createElement('button');
-  button.innerText = 'Send';
+  messagesWrapperDiv = document.createElement('div');
+  messagesWrapperDiv.classList.add('messages-wrapper');
+  appContainer.appendChild(messagesWrapperDiv);
 
-  formMessageElement.appendChild(inputMessageElement);
-  formMessageElement.appendChild(button);
+  messagesWrapperDiv.addEventListener('scroll', () => {
+    shouldAutoScroll = checkIsNearBottom();
 
-  root.appendChild(formMessageElement);
-
-  formMessageElement.addEventListener('submit', async function (event) {
-    try {
-      event.preventDefault();
-      const content = event.target[0].value;
-
-      const username = JSON.parse(user).username;
-
-      const messageObject = {
-        username,
-        content,
-      };
-
-      const response = await fetch('/api/message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(messageObject),
-      });
-      const data = await response.json();
-      console.log('data: ', data);
-      document.location.reload();
-    } catch (error) {
-      console.log('ERROR: ', error);
+    if (shouldAutoScroll) {
+      hideScrollToBottomButton();
+    } else {
+      showScrollToBottomButton();
     }
   });
 };
 
-const initFetchMessages = () => {
-  return fetch(`/api/messages`)
-    .then((res) => res.json())
-    .then((body) => {
-      console.log('messages: ', body.messages);
-
-      const messages = body.messages;
-
-      messagesWrapperDiv = document.createElement('div');
-      messagesWrapperDiv.classList.add('messages-wrapper');
-
-      root.appendChild(messagesWrapperDiv);
-
-      messages.forEach((message) => {
-        const isUserAuthorOfMessage =
-          message.username == JSON.parse(user).username;
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message');
-        if (isUserAuthorOfMessage) {
-          messageDiv.classList.add('message-of-mine');
-
-          const messageConfigButton = document.createElement('button');
-          messageConfigButton.innerText = 'config';
-          messageConfigButton.classList.add('config-button');
-          messageDiv.appendChild(messageConfigButton);
-
-          messageConfigButton.addEventListener('click', function (event) {
-            if (messageConfigIsOpened) destroyMessageConfig();
-            const { clientX: xCoord, clientY: yCoord } = event;
-            console.log('xCoord: ', xCoord, ' yCoord: ', yCoord);
-
-            messageConfigBlock = document.createElement('div');
-            messageConfigBlock.classList.add('message-config');
-            messageConfigBlock.style.top = yCoord + 'px';
-            messageConfigBlock.style.left = xCoord + 'px';
-
-            const buttonEdit = document.createElement('button');
-            const buttonDelete = document.createElement('button');
-            buttonEdit.innerText = 'Edit';
-            buttonDelete.innerText = 'Delete';
-
-            messageConfigBlock.appendChild(buttonEdit);
-            messageConfigBlock.appendChild(buttonDelete);
-
-            buttonEdit.addEventListener('click', function (event) {
-              const currentMessage = message;
-              inputValue = currentMessage.content;
-              inputMessageElement.value = currentMessage.content;
-            });
-
-            root.appendChild(messageConfigBlock);
-            messageConfigIsOpened = !messageConfigIsOpened;
-          });
-        }
-
-        const messageP = document.createElement('p');
-        messageP.innerHTML = message.content;
-
-        const messageAvatarImg = document.createElement('img');
-        messageAvatarImg.setAttribute('src', message.avatar);
-        messageAvatarImg.setAttribute('width', 32);
-        messageAvatarImg.setAttribute('height', 32);
-
-        const messageUsernameP = document.createElement('p');
-        messageUsernameP.innerText = message.username;
-
-        messageDiv.appendChild(messageAvatarImg);
-        messageDiv.appendChild(messageUsernameP);
-        messageDiv.appendChild(messageP);
-
-        messagesWrapperDiv.appendChild(messageDiv);
-      });
-
-      if (user) initBottomFormMessage();
-    });
-};
-
-const destroyOldContent = () => {
-  root.removeChild(messagesWrapperDiv);
-  root.removeChild(formMessageElement);
-  messagesWrapperDiv = null;
-  formMessageElement = null;
-};
-
 const destroyMessageConfig = () => {
-  root.removeChild(messageConfigBlock);
+  if (!messageConfigBlock) return;
+
+  appContainer.removeChild(messageConfigBlock);
   messageConfigBlock = null;
   messageConfigIsOpened = false;
+  openedConfigMessageUuid = null;
 };
 
-if (!user) {
-  const headerNonAuth = document.createElement('header');
-  headerNonAuth.innerText = 'The CSS Whisperer';
-  root.appendChild(headerNonAuth);
+const checkIsNearBottom = () => {
+  if (!messagesWrapperDiv) return true;
 
-  const buttonForCallingAuthDialog = document.createElement('button');
-  buttonForCallingAuthDialog.innerText = 'Log in';
-  headerNonAuth.appendChild(buttonForCallingAuthDialog);
+  const distanceFromBottom =
+    messagesWrapperDiv.scrollHeight -
+    messagesWrapperDiv.scrollTop -
+    messagesWrapperDiv.clientHeight;
+  return distanceFromBottom < 100;
+};
 
-  buttonForCallingAuthDialog.addEventListener('click', function (event) {
-    event.preventDefault();
+const ensureScrollBottomButton = () => {
+  if (scrollToBottomBtn) return;
 
-    const dialogForAuthWrapper = document.createElement('div');
-    dialogForAuthWrapper.classList.add('dialog-auth-wrapper');
-    const dialogForAuth = document.createElement('div');
-    dialogForAuth.classList.add('dialog-auth');
+  scrollToBottomBtn = document.createElement('button');
+  scrollToBottomBtn.type = 'button';
+  scrollToBottomBtn.classList.add('scroll-to-bottom-btn');
+  scrollToBottomBtn.innerText = '↓';
 
-    const formForAuth = document.createElement('form');
-    const inputForAuth = document.createElement('input');
-    const buttonSubmitAuth = document.createElement('button');
-    buttonSubmitAuth.innerText = 'Log in';
-    const buttonLeaveAuth = document.createElement('button');
-    buttonLeaveAuth.innerText = 'Close';
+  scrollToBottomBtn.addEventListener('click', () => {
+    if (!messagesWrapperDiv) return;
 
-    formForAuth.appendChild(inputForAuth);
-    formForAuth.appendChild(buttonSubmitAuth);
-    formForAuth.appendChild(buttonLeaveAuth);
+    shouldAutoScroll = true;
+    hideScrollToBottomButton();
 
-    dialogForAuth.appendChild(formForAuth);
-
-    dialogForAuthWrapper.appendChild(dialogForAuth);
-    root.appendChild(dialogForAuthWrapper);
-
-    formForAuth.addEventListener('submit', async function (event) {
-      try {
-        event.preventDefault();
-        const username = event.target[0].value;
-        console.log('username: ', username);
-
-        const response = await fetch(`/api/user?username=${username}`);
-        const data = await response.json();
-        console.log('data: ', data);
-        const user = data.user;
-        localStorage.setItem('user', JSON.stringify(user));
-        document.location.reload();
-      } catch (error) {
-        alert(error);
-      }
+    messagesWrapperDiv.scrollTo({
+      top: messagesWrapperDiv.scrollHeight,
+      behavior: 'smooth',
     });
+
+    setTimeout(() => {
+      hideScrollToBottomButton();
+    }, 300);
+  });
+
+  appContainer.appendChild(scrollToBottomBtn);
+};
+
+const showScrollToBottomButton = () => {
+  ensureScrollBottomButton();
+  scrollToBottomBtn.classList.add('visible');
+};
+
+const hideScrollToBottomButton = () => {
+  if (!scrollToBottomBtn) return;
+  scrollToBottomBtn.classList.remove('visible');
+};
+
+// menu-out close click
+document.addEventListener('click', (e) => {
+  if (!messageConfigIsOpened) return;
+
+  // menu-in click
+  if (messageConfigBlock && messageConfigBlock.contains(e.target)) return;
+
+  destroyMessageConfig();
+});
+
+// ---------- UI: bottom form ----------
+const initBottomFormMessage = () => {
+  if (formMessageElement) return;
+
+  const chatForm = initChatForm({
+    root: appContainer,
+    storedUser,
+    inputValue,
+    setInputValue: (value) => {
+      inputValue = value;
+    },
+    getEditingMessageUuid: () => editingMessageUuid,
+    resetEditingState: () => {
+      editingMessageUuid = null;
+    },
+    onSendMessage: async ({ username, content, editingMessageUuid }) => {
+      if (editingMessageUuid) {
+        await updateMessage({
+          uuid: editingMessageUuid,
+          username,
+          content,
+        });
+      } else {
+        await createMessage({
+          username,
+          content,
+        });
+      }
+
+      shouldAutoScroll = true;
+      await initFetchMessages();
+    },
+  });
+
+  formMessageElement = chatForm.formMessageElement;
+  inputMessageElement = chatForm.inputMessageElement;
+};
+
+// ---------- API: fetch + render ----------
+const initFetchMessages = async () => {
+  try {
+    const messages = await fetchMessages();
+
+    ensureMessagesWrapper();
+    messagesWrapperDiv.innerHTML = '';
+
+    let previousDateKey = null;
+
+    messages.forEach((message) => {
+      // date separator
+      const currentDateKey = getDateKey(message.created_at);
+
+      if (currentDateKey !== previousDateKey) {
+        const separator = document.createElement('div');
+        separator.classList.add('date-separator');
+        separator.innerText = formatDateSeparator(message.created_at);
+        messagesWrapperDiv.appendChild(separator);
+
+        previousDateKey = currentDateKey;
+      }
+      // message element
+      const element = createMessageElement({
+        message,
+        storedUser,
+        // config click handler
+        onConfigClick: (message, event, messageDiv) => {
+          if (!messageDiv) return;
+
+          if (
+            messageConfigIsOpened &&
+            openedConfigMessageUuid === message.uuid
+          ) {
+            destroyMessageConfig();
+            openedConfigMessageUuid = null;
+            return;
+          }
+
+          if (messageConfigIsOpened) {
+            destroyMessageConfig();
+          }
+
+          const containerRect = appContainer.getBoundingClientRect();
+          const messageRect = messageDiv.getBoundingClientRect();
+
+          const menuWidth = 194;
+          const menuOffset = 8;
+
+          const xCoord = messageRect.right - containerRect.left - menuWidth;
+          const yCoord = messageRect.top - containerRect.top - menuOffset - 90;
+
+          messageConfigBlock = openConfigMenu({
+            root: appContainer,
+            x: xCoord,
+            y: Math.max(8, yCoord),
+            message,
+            storedUser,
+            inputMessageElement,
+            destroyMessageConfig,
+            onEdit: (message) => {
+              editingMessageUuid = message.uuid;
+              inputValue = message.content || '';
+
+              if (inputMessageElement) {
+                inputMessageElement.value = inputValue;
+              }
+            },
+            onDelete: async ({ uuid, username }) => {
+              await deleteMessage({ uuid, username });
+              await initFetchMessages();
+            },
+          });
+
+          messageConfigIsOpened = true;
+          openedConfigMessageUuid = message.uuid;
+        },
+      });
+
+      messagesWrapperDiv.appendChild(element);
+    });
+    if (storedUser) initBottomFormMessage();
+    if (shouldAutoScroll) {
+      setTimeout(() => {
+        messagesWrapperDiv.scrollTop = messagesWrapperDiv.scrollHeight;
+        hideScrollToBottomButton();
+      }, 0);
+    } else {
+      showScrollToBottomButton();
+    }
+  } catch (err) {
+    console.log('Fetch messages error', err);
+  }
+};
+
+// ---------- auth UI ----------
+if (!storedUser) {
+  initAuthUi({
+    root: appContainer,
+    onAuthSuccess: async (username) => {
+      let response = await fetch(
+        `/api/user?username=${encodeURIComponent(username)}`,
+      );
+
+      if (!response.ok) {
+        response = await fetch('/api/user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+        });
+      }
+
+      const data = await response.json();
+
+      if (!response.ok || !data.user) {
+        console.log('Auth/Register error:', data);
+        alert(data?.error?.message || 'Auth/Register failed');
+        return;
+      }
+
+      localStorage.setItem('user', JSON.stringify(data.user));
+      document.location.reload();
+    },
   });
 } else {
-  const headerNonAuth = document.createElement('header');
-  headerNonAuth.innerText = 'Вы авторизовались';
+  initLoggedInHeader({
+    root: appContainer,
+    storedUser,
+    onProfileClick: () => {
+      if (profileModalOpen) {
+        const modal = document.querySelector('.dialog-auth-wrapper');
+        if (modal) modal.remove();
 
-  root.appendChild(headerNonAuth);
+        profileModalOpen = false;
+        return;
+      }
+      profileModalOpen = true;
 
-  // initBottomFormMessage();
+      openProfileModal({
+        root,
+        storedUser,
+
+        onClose: () => {
+          profileModalOpen = false;
+        },
+
+        onLogout: () => {
+          localStorage.removeItem('user');
+          document.location.reload();
+        },
+
+        onJoin: async (username) => {
+          console.log('New username:', username);
+        },
+
+        onChangePicture: () => {
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          fileInput.accept = 'image/*';
+
+          fileInput.addEventListener('change', async () => {
+            const file = fileInput.files?.[0];
+            if (!file) return;
+
+            try {
+              const data = await updateUserAvatar({
+                username: storedUser.username,
+                file,
+              });
+
+              localStorage.setItem('user', JSON.stringify(data.user));
+              document.location.reload();
+            } catch (error) {
+              console.log('Avatar upload error:', error);
+              alert('Failed to update picture');
+            }
+          });
+
+          fileInput.click();
+        },
+
+        onDeletePicture: async () => {
+          try {
+            const data = await deleteUserAvatar({
+              username: storedUser.username,
+            });
+
+            localStorage.setItem('user', JSON.stringify(data.user));
+            document.location.reload();
+          } catch (error) {
+            console.log('Avatar delete error:', error);
+            alert('Failed to delete picture');
+          }
+        },
+      });
+    },
+  });
 }
 
-initFetchMessages();
-// setInterval(() => {
-// 	destroyOldContent();
-// 	initFetchMessages();
-// }, 5000);
-
-// fetch(`/api/messages`)
-// 	.then((res) => res.json())
-// 	.then((body) => {
-// 		console.log("messages: ", body.messages);
-
-// 		const messages = body.messages;
-
-// 		const messagesWrapperDiv = document.createElement("div");
-// 		messagesWrapperDiv.classList.add("messages-wrapper");
-
-// 		root.appendChild(messagesWrapperDiv);
-
-// 		messages.forEach((message) => {
-// 			const messageDiv = document.createElement("div");
-// 			messageDiv.classList.add("message");
-
-// 			const messageP = document.createElement("p");
-// 			messageP.innerHTML = message.content;
-
-// 			const messageAvatarImg = document.createElement("img");
-// 			messageAvatarImg.setAttribute("src", message.avatar);
-// 			messageAvatarImg.setAttribute("width", 32);
-// 			messageAvatarImg.setAttribute("height", 32);
-
-// 			const messageUsernameP = document.createElement("p");
-// 			messageUsernameP.innerText = message.username;
-// 			// messageDiv.innerText = message.content;
-
-// 			messageDiv.appendChild(messageAvatarImg);
-// 			messageDiv.appendChild(messageUsernameP);
-// 			messageDiv.appendChild(messageP);
-
-// 			messagesWrapperDiv.appendChild(messageDiv);
-// 		});
-
-// 		if (user) initBottomFormMessage();
-// 	});
+// start
+if (storedUser) {
+  initFetchMessages();
+  // setInterval(initFetchMessages, 3000);
+}

@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import path from 'path';
 import fs from 'fs/promises';
@@ -115,10 +115,10 @@ const init = () => {
 				`);
 
           await pool.query(
-            `DROP TRIGGER IF EXISTS set_users_updated_at    ON public.users;`
+            `DROP TRIGGER IF EXISTS set_users_updated_at    ON public.users;`,
           );
           await pool.query(
-            `DROP TRIGGER IF EXISTS set_messages_updated_at ON public.messages;`
+            `DROP TRIGGER IF EXISTS set_messages_updated_at ON public.messages;`,
           );
 
           await pool.query(`
@@ -155,7 +155,7 @@ app.get('/user', async (req, res) => {
 
     const { rows: users } = await pool.query(
       `SELECT * FROM users WHERE username = $1`,
-      [username]
+      [username],
     );
     if (users.length === 0) throw new Error('SUCH USER DOES NOT EXISTS');
     res.status(200).json({ user: users[0] });
@@ -172,7 +172,7 @@ app.post('/user', upload.single('avatar'), async (req, res) => {
 
     const { rows: users } = await pool.query(
       `SELECT * FROM users WHERE username = $1`,
-      [username]
+      [username],
     );
 
     if (users.length > 0) throw new Error('SUCH USER ALREADY EXISTS');
@@ -197,7 +197,7 @@ app.post('/user', upload.single('avatar'), async (req, res) => {
 
     const { rows: createdUser } = await pool.query(
       `SELECT * FROM users WHERE username = $1`,
-      [username]
+      [username],
     );
 
     res.status(200).json({ user: createdUser[0] });
@@ -212,7 +212,7 @@ app.patch('/user', upload.single('avatar'), async (req, res) => {
     const { rows: users } = await pool.query(
       `
     SELECT * FROM users WHERE username = $1`,
-      [username]
+      [username],
     );
     if (!users[0]) throw new Error(`User not found`);
     let pathForDB = null;
@@ -235,7 +235,7 @@ app.patch('/user', upload.single('avatar'), async (req, res) => {
     ]);
     const { rows: updatedUsers } = await pool.query(
       `SELECT * FROM users WHERE username = $1`,
-      [username]
+      [username],
     );
 
     console.log('UPDATED USER: ', updatedUsers);
@@ -245,16 +245,57 @@ app.patch('/user', upload.single('avatar'), async (req, res) => {
   }
 });
 
+app.delete('/user/avatar', async (req, res) => {
+  try {
+    const { username } = req.body;
+
+    if (!username || typeof username !== 'string') {
+      return res.status(400).send(' USERNAME IS REQUIRED');
+    }
+
+    const { rows: users } = await pool.query(
+      `SELECT * FROM users WHERE username =$1`,
+      [username],
+    );
+
+    if (!users[0]) {
+      return res.status(404).send('USER NOT FOUND');
+    }
+
+    await pool.query(`UPDATE users SET avatar = $1 WHERE username = $2`, [
+      null,
+      username,
+    ]);
+
+    const { rows: updatedUsers } = await pool.query(
+      `SELECT * FROM users WHERE username = $1`,
+      [username],
+    );
+
+    res.status(200).json({ user: updatedUsers[0] });
+  } catch (error: any) {
+    res.status(400).send(error.message);
+  }
+});
 app.get('/messages', async (req, res) => {
   try {
     const { rows: messages } = await pool.query(`
-      SELECT messages.uuid as uuid,
+      SELECT
+        messages.uuid AS uuid,
         messages.content AS content,
+        messages.created_at AS created_at,
         messages.updated_at AS updated_at,
         users.username AS username,
         users.avatar AS avatar,
-        CASE WHEN messages.created_at = messages.updated_at THEN 'false' else 'true' END AS was_edited
-      FROM messages LEFT JOIN users ON users.uuid = messages.author_uuid`);
+        CASE
+          WHEN messages.created_at = messages.updated_at THEN 'false'
+          ELSE 'true'
+        END AS was_edited
+      FROM messages
+      LEFT JOIN users ON users.uuid = messages.author_uuid
+      ORDER BY messages.created_at ASC
+    `);
+
     res.status(200).json({ messages });
   } catch (error: any) {
     res.status(400).send(error.message);
@@ -282,7 +323,7 @@ app.post('/message', async (req, res) => {
 
     const { rows: users } = await pool.query(
       `SELECT uuid, username FROM users WHERE lower(username) = lower($1) LIMIT 1`,
-      [username]
+      [username],
     );
     if (users.length === 0) {
       return res.status(404).json({ error: 'SUCH USER DOES NOT EXIST' });
@@ -292,8 +333,8 @@ app.post('/message', async (req, res) => {
     const { rows: inserted } = await pool.query(
       `INSERT INTO messages (content, author_uuid)
        VALUES ($1, $2)
-       RETURNING id, content, author_uuid, created_at`,
-      [content, user.uuid]
+       RETURNING uuid, content, author_uuid, created_at`,
+      [content, user.uuid],
     );
     const message = inserted[0];
 
@@ -304,6 +345,123 @@ app.post('/message', async (req, res) => {
       .json({ error: 'Internal server error', detail: err?.message });
   }
 });
+
+app.patch(
+  '/message/:uuid',
+  async (req: express.Request<{ uuid: string }>, res: Response) => {
+    try {
+      const uuid = String(req.params.uuid ?? '').trim();
+      let { username, content } = req.body ?? {};
+
+      if (!uuid) return res.status(400).json({ error: 'uuid is required' });
+      if (typeof username !== 'string' || typeof content !== 'string') {
+        return res
+          .status(400)
+          .json({ error: 'username and content must be strings' });
+      }
+      username = username.trim();
+      content = content.trim();
+
+      if (!username || !content) {
+        return res
+          .status(400)
+          .json({ error: 'USERNAME AND CONTENT ARE REQUIRED' });
+      }
+      if (username.length > 32 || content.length > 2000) {
+        return res.status(400).json({ error: 'Payload too long' });
+      }
+
+      // search message + author
+      const { rows: found } = await pool.query(
+        `
+      SELECT m.uuid, u.username 
+      FROM messages m 
+      LEFT JOIN users u ON u.uuid = m.author_uuid 
+      WHERE m.uuid = $1
+      `,
+        [uuid],
+      );
+      if (found.length === 0) {
+        return res.status(404).json({ error: 'MESSAGE NOT FOUND' });
+      }
+      const authorUsername = found[0].username;
+      if (
+        !authorUsername ||
+        authorUsername.toLowerCase() !== username.toLowerCase()
+      ) {
+        return res.status(403).json({ error: 'YOU ARE NOT THE AUTHOR' });
+      }
+      // updated contents
+      const { rows: updated } = await pool.query(
+        `
+      UPDATE messages
+      set content = $1
+      WHERE uuid = $2
+      RETURNING uuid, content, updated_at`,
+        [content, uuid],
+      );
+      return res.status(200).json({ message: updated[0] });
+    } catch (err: any) {
+      return res
+        .status(500)
+        .json({ error: 'Iternal server error', detail: err?.message });
+    }
+  },
+);
+
+app.delete(
+  '/message/:uuid',
+  async (req: express.Request<{ uuid: string }>, res: Response) => {
+    try {
+      const uuid = String(req.params.uuid ?? '').trim();
+      let { username } = req.body ?? {};
+
+      if (!uuid) return res.status(400).json({ error: 'uuid is required' });
+      if (typeof username !== 'string') {
+        return res.status(400).json({ error: 'username must be a string' });
+      }
+
+      username = username.trim();
+      if (!username) {
+        return res.status(400).json({ error: 'USERNAME IS REQUIRED' });
+      }
+      if (username.length > 32) {
+        return res.status(400).json({ error: 'Payload too long' });
+      }
+
+      // search message + author
+      const { rows: found } = await pool.query(
+        `
+      SELECT m.uuid, u.username
+      FROM messages m 
+      LEFT JOIN users u ON u.uuid = m.author_uuid
+      WHERE m.uuid = $1
+      `,
+        [uuid],
+      );
+
+      if (found.length === 0) {
+        return res.status(404).json({ error: 'MESSAGE NOT FOUND' });
+      }
+
+      const authorUsername = found[0].username;
+      if (
+        !authorUsername ||
+        authorUsername.toLowerCase() !== username.toLowerCase()
+      ) {
+        return res.status(403).json({ error: 'YOU ARE NOT THE AUTHOR' });
+      }
+
+      await pool.query(`DELETE FROM messages WHERE uuid = $1`, [uuid]);
+
+      return res.status(200).json({ ok: true });
+    } catch (err: any) {
+      return res
+        .status(500)
+        .json({ error: 'Internal server error', detail: err?.message });
+    }
+  },
+);
 
 init().then(() => {
   app.listen(PORT, () => {

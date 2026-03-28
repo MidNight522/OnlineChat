@@ -34,8 +34,6 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - ./backend:/app
-      - /app/node_modules
       - uploads:/app/uploads
     expose: ['3001']
     networks: [internal]

@@ -1,0 +1,32 @@
+.scroll-to-bottom-btn {
+  position: absolute;
+  right: 30px;
+  bottom: 100px;
+  z-index: 30;
+
+  padding: 10px 14px;
+  border: none;
+  border-radius: 999px;
+  background: #2d2d2d;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.scroll-to-bottom-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.scroll-to-bottom-btn:hover {
+  background: #1f1f1f;
+}
