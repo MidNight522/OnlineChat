@@ -1,3 +1,4 @@
+import { createToolbar } from './toolBar.js';
 export const initChatForm = ({
   root,
   storedUser,
@@ -36,7 +37,7 @@ export const initChatForm = ({
 
   const editButton = document.createElement('button');
   editButton.type = 'button';
-  editButton.classList.add('edit-button');
+  editButton.classList.add('edit-text-button');
 
   const editIcon = document.createElement('img');
   editIcon.src = '/assets/images/editButton.svg';
@@ -68,6 +69,11 @@ export const initChatForm = ({
 
   sendButton.appendChild(sendIcon);
 
+  const toolbar = createToolbar({
+    inputMessageElement,
+    setInputValue,
+  });
+  inputWrapper.appendChild(toolbar);
   inputWrapper.appendChild(inputMessageElement);
   inputWrapper.appendChild(charCounter);
   inputWrapper.appendChild(editButton);
@@ -104,6 +110,24 @@ export const initChatForm = ({
   document.addEventListener('click', (e) => {
     if (!emojiPicker.contains(e.target) && !emojiButton.contains(e.target)) {
       emojiPicker.style.display = 'none';
+    }
+  });
+
+  editButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const isVisible = toolbar.style.display === 'flex';
+    toolbar.style.display = isVisible ? 'none' : 'flex';
+  });
+
+  document.addEventListener('click', (event) => {
+    if (
+      (!toolbar.contains(event.target) &&
+        !inputWrapper.contains(event.target)) ||
+      sendButton.contains(event.target)
+    ) {
+      toolbar.style.display = 'none';
     }
   });
 
