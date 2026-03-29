@@ -1,0 +1,111 @@
+.profile-header {
+  color: rgba(101, 111, 125, 1);
+}
+.profile-picture-actions {
+  display: inline-flex;
+  position: absolute;
+  top: 110px;
+  gap: 8px;
+}
+
+.profile-picture-actions button {
+  border: none;
+  border-radius: 5px;
+  padding: 8px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.change-button {
+  margin-left: 27px;
+  background-color: rgba(22, 2, 17, 1);
+  color: #fff;
+}
+
+.change-button:hover {
+  background: rgba(0, 0, 0, 0.842);
+  transition: 0.2s ease-in-out;
+  transform: scale(102%);
+}
+
+.delete-button {
+  background-color: #fff;
+  color: rgba(175, 1, 1, 1);
+}
+
+.delete-button:hover {
+  background: rgba(0, 0, 0, 0.06);
+  transition: 0.2s ease-in-out;
+  transform: scale(102%);
+}
+
+.name-label {
+  color: rgba(28, 28, 28, 1);
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0px;
+  margin-bottom: 6px;
+}
+
+.name-input {
+  border: none;
+  background-color: rgba(26, 56, 96, 0.1);
+  width: 100%;
+  padding: 10px 7px;
+}
+
+.join-button {
+  width: 100%;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 0px 6px 0px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  background-color: rgba(28, 28, 28, 1);
+  color: rgba(255, 255, 255, 1);
+}
+.join-button:hover {
+  background: rgba(0, 0, 0, 0.842);
+  transition: 0.2s ease-in-out;
+  transform: scale(102%);
+}
+
+.close-button {
+  width: 100%;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 0px 6px 0px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  background-color: rgba(233, 236, 240, 1);
+  color: rgba(28, 28, 28, 1);
+}
+
+.close-button:hover {
+  background: rgba(0, 0, 0, 0.06);
+  transition: 0.2s ease-in-out;
+  transform: scale(102%);
+}
+
+.logout-button {
+  width: 100%;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 0px 6px 0px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  margin-bottom: 8px;
+  background-color: rgba(255, 255, 255, 1);
+  color: rgba(202, 21, 12, 1);
+}
+
+.logout-button:hover {
+  background: rgba(218, 218, 218, 0.06);
+  transition: 0.2s ease-in-out;
+  transform: scale(102%);
+}

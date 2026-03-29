@@ -1,6 +1,6 @@
 .dialog-auth-wrapper {
   position: fixed;
-  top: 68px;
+  top: 59px;
   left: 0;
   width: 100vw;
   height: 100vh;
@@ -16,7 +16,7 @@
   background-color: #fff;
   border: 1px solid;
   border-radius: 8px;
-  padding: 8px;
+  padding: 24px;
 }
 
 .dialog-auth button {
@@ -123,14 +123,4 @@
   object-fit: cover;
   border-radius: 50%;
   margin: 0 auto 12px;
-}
-
-.profile-picture-actions {
-  display: inline-flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.profile-picture-actions button {
-  flex: 1;
 }

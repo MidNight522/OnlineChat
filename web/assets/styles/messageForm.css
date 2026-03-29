@@ -1,0 +1,124 @@
+.bottom-form {
+  position: sticky;
+  bottom: 40px;
+  background: rgba(247, 248, 249, 1);
+  padding: 0 24px;
+}
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-message {
+  width: 100%;
+  min-height: 64px;
+  max-height: 280px;
+  resize: none;
+  box-sizing: border-box;
+  border: 1px solid rgba(222, 222, 222, 1);
+  border-radius: 20px;
+  padding: 20px 140px 20px 22px;
+  overflow: hidden;
+  background: #fff;
+  transition:
+    border-color 0.2 ease,
+    box-shadow 0.2 ease,
+    height 0.1s ease;
+}
+
+.input-message:hover {
+  border-color: rgba(180, 180, 180, 1);
+}
+.input-message:focus {
+  outline: none;
+  border-color: rgba(88, 86, 214, 1);
+  box-shadow: 0 0 0 2px rgba(91, 140, 255, 0.15);
+}
+
+.input-message:disabled {
+  background: #f2f2f2;
+  border-color: #dcdcdc;
+  cursor: not-allowed;
+  color: #999;
+}
+
+.input-message.editing {
+  border-color: rgba(88, 86, 214, 1);
+  box-shadow: 0 0 0 2px rgba(91, 140, 255, 0.2);
+}
+
+.char-counter {
+  position: absolute;
+  right: 140px;
+  bottom: 8px;
+  font-size: 12px;
+  color: #888;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.char-counter.visible {
+  opacity: 1;
+}
+
+.char-counter.warning {
+  color: #e5484d;
+}
+.input-wrapper button {
+  position: absolute;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.input-wrapper button:hover {
+  transform: scale(1.03);
+  transition: 0.2s ease-in-out;
+}
+
+.edit-button {
+  right: 110px;
+  bottom: 27px;
+}
+
+.emoji-button {
+  right: 75px;
+  bottom: 27px;
+}
+.emoji-picker {
+  position: absolute;
+  bottom: 70px;
+  right: 20px;
+  z-index: 100;
+
+  width: 340px;
+  height: 280px;
+
+  border-radius: 12px;
+  overflow: hidden;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.send-message-button {
+  right: 20px;
+  bottom: 20px;
+}
+
+.edit-button img,
+.emoji-button img {
+  width: 24px;
+  height: 24px;
+}
+
+.send-message-button img {
+  width: 40px;
+  height: 40px;
+}

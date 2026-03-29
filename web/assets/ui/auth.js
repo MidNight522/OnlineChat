@@ -190,6 +190,7 @@ export const openProfileModal = ({
   });
 
   const titlePicture = document.createElement('p');
+  titlePicture.classList.add('profile-header');
   titlePicture.innerText = 'Profile picture';
 
   const profileImage = document.createElement('img');
@@ -201,10 +202,12 @@ export const openProfileModal = ({
   pictureButtons.classList.add('profile-picture-actions');
 
   const changePictureBtn = document.createElement('button');
+  changePictureBtn.classList.add('change-button');
   changePictureBtn.addEventListener.type = 'button';
   changePictureBtn.innerText = 'Change picture';
 
   const deletePictureBtn = document.createElement('button');
+  deletePictureBtn.classList.add('delete-button');
   deletePictureBtn.type = 'button';
   deletePictureBtn.innerText = 'Delete picture';
 
@@ -212,9 +215,11 @@ export const openProfileModal = ({
   pictureButtons.appendChild(deletePictureBtn);
 
   const nameLabel = document.createElement('p');
+  nameLabel.classList.add('name-label');
   nameLabel.innerText = 'Enter your name';
 
   const nameInput = document.createElement('input');
+  nameInput.classList.add('name-input');
   nameInput.type = 'text';
   nameInput.value = storedUser?.username || '';
 
@@ -222,14 +227,17 @@ export const openProfileModal = ({
   errorText.classList.add('auth-error');
 
   const joinBtn = document.createElement('button');
+  joinBtn.classList.add('join-button');
   joinBtn.type = 'button';
   joinBtn.innerText = 'Join';
 
   const closeBtn = document.createElement('button');
+  closeBtn.classList.add('close-button');
   closeBtn.type = 'button';
   closeBtn.innerText = 'Close';
 
   const logoutBtn = document.createElement('button');
+  logoutBtn.classList.add('logout-button');
   logoutBtn.type = 'button';
   logoutBtn.innerText = 'Logout';
 

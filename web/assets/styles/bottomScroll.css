@@ -1,13 +1,13 @@
 .scroll-to-bottom-btn {
   position: absolute;
   right: 30px;
-  bottom: 100px;
+  bottom: 125px;
   z-index: 30;
 
   padding: 10px 14px;
   border: none;
   border-radius: 999px;
-  background: #2d2d2d;
+  background: rgb(85, 84, 180);
   color: white;
   font-size: 13px;
   cursor: pointer;
@@ -28,5 +28,5 @@
 }
 
 .scroll-to-bottom-btn:hover {
-  background: #1f1f1f;
+  background: #372c70;
 }

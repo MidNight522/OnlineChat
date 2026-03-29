@@ -34,9 +34,10 @@ export const openConfigMenu = ({
 
     if (inputMessageElement) {
       inputMessageElement.focus();
+      inputMessageElement.classList.add('editing');
       inputMessageElement.placeholder = 'Editing message...';
     }
-
+    inputMessageElement.classList.remove('editing');
     destroyMessageConfig();
   });
 
