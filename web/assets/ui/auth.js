@@ -2,102 +2,97 @@ export const initAuthUi = ({ root, onAuthSuccess }) => {
   const validateUsername = (username) => {
     const trimmed = username.trim();
 
-    if (!trimmed) {
-      return 'Username is required';
-    }
-
-    if (trimmed.length < 2) {
-      return 'Username must be at least 2 characters';
-    }
-
-    if (trimmed.length > 15) {
+    if (!trimmed) return 'Username is required';
+    if (trimmed.length < 2) return 'Username must be at least 2 characters';
+    if (trimmed.length > 15)
       return 'Username must be no more than 15 characters';
-    }
 
     return '';
   };
 
-  const headerNonAuth = document.createElement('header');
-  headerNonAuth.classList.add('chat-header');
+  const authPage = document.createElement('div');
+  authPage.classList.add('auth-page');
+
+  const authCard = document.createElement('div');
+  authCard.classList.add('auth-card');
+
+  const chatAvatar = document.createElement('img');
+  chatAvatar.classList.add('auth-chat-avatar');
+  chatAvatar.src = '/assets/images/chat-avatar.svg';
+  chatAvatar.alt = 'Chat avatar';
 
   const title = document.createElement('h1');
-  title.classList.add('chat-title');
-  title.innerText = 'The CSS Whisperer';
+  title.classList.add('auth-page-title');
+  title.innerText = 'Chat Room';
 
-  const buttonForCallingAuthDialog = document.createElement('button');
-  buttonForCallingAuthDialog.type = 'button';
-  buttonForCallingAuthDialog.classList.add('login-icon-button');
+  const subtitle = document.createElement('p');
+  subtitle.classList.add('auth-page-subtitle');
+  subtitle.innerText = 'Join the chat';
 
-  const icon = document.createElement('img');
-  icon.src = '/assets/images/ProfileInfo.svg';
-  icon.alt = 'Profile';
+  const formForAuth = document.createElement('form');
+  formForAuth.classList.add('auth-form');
 
-  buttonForCallingAuthDialog.appendChild(icon);
+  const inputForAuth = document.createElement('input');
+  inputForAuth.classList.add('auth-input');
+  inputForAuth.placeholder = 'Enter username';
+  const codeInput = document.createElement('input');
+  codeInput.classList.add('auth-input');
+  codeInput.placeholder = 'Enter 6-digit code';
+  codeInput.maxLength = 6;
 
-  headerNonAuth.appendChild(title);
-  headerNonAuth.appendChild(buttonForCallingAuthDialog);
-  root.appendChild(headerNonAuth);
+  const errorText = document.createElement('p');
+  errorText.classList.add('auth-error');
 
-  buttonForCallingAuthDialog.addEventListener('click', (event) => {
+  const buttonSubmitAuth = document.createElement('button');
+  buttonSubmitAuth.type = 'submit';
+  buttonSubmitAuth.classList.add('auth-submit-button');
+  buttonSubmitAuth.innerText = 'Join';
+
+  formForAuth.appendChild(inputForAuth);
+  formForAuth.appendChild(codeInput);
+  formForAuth.appendChild(errorText);
+  formForAuth.appendChild(buttonSubmitAuth);
+
+  authCard.appendChild(chatAvatar);
+  authCard.appendChild(title);
+  authCard.appendChild(subtitle);
+  authCard.appendChild(formForAuth);
+
+  authPage.appendChild(authCard);
+  root.appendChild(authPage);
+
+  inputForAuth.addEventListener('input', () => {
+    errorText.innerText = '';
+  });
+
+  codeInput.addEventListener('input', (e) => {
+    e.target.value = e.target.value.replace(/\D/g, '');
+  });
+
+  formForAuth.addEventListener('submit', async (event) => {
     event.preventDefault();
 
-    const dialogForAuthWrapper = document.createElement('div');
-    dialogForAuthWrapper.classList.add('dialog-auth-wrapper');
+    try {
+      const username = inputForAuth.value.trim();
+      const accessCode = codeInput.value.trim();
 
-    const dialogForAuth = document.createElement('div');
-    dialogForAuth.classList.add('dialog-auth');
-
-    const formForAuth = document.createElement('form');
-    const inputForAuth = document.createElement('input');
-    inputForAuth.placeholder = 'Enter username';
-
-    const errorText = document.createElement('p');
-    errorText.classList.add('auth-error');
-
-    const buttonSubmitAuth = document.createElement('button');
-    buttonSubmitAuth.type = 'submit';
-    buttonSubmitAuth.innerText = 'Log in';
-
-    const buttonLeaveAuth = document.createElement('button');
-    buttonLeaveAuth.type = 'button';
-    buttonLeaveAuth.innerText = 'Close';
-
-    formForAuth.appendChild(inputForAuth);
-    formForAuth.appendChild(errorText);
-    formForAuth.appendChild(buttonSubmitAuth);
-    formForAuth.appendChild(buttonLeaveAuth);
-
-    dialogForAuth.appendChild(formForAuth);
-    dialogForAuthWrapper.appendChild(dialogForAuth);
-    root.appendChild(dialogForAuthWrapper);
-
-    buttonLeaveAuth.addEventListener('click', () => {
-      root.removeChild(dialogForAuthWrapper);
-    });
-
-    inputForAuth.addEventListener('input', () => {
-      errorText.innerText = '';
-    });
-
-    formForAuth.addEventListener('submit', async (event) => {
-      event.preventDefault();
-
-      try {
-        const username = inputForAuth.value.trim();
-        const validationError = validateUsername(username);
-
-        if (validationError) {
-          errorText.innerText = validationError;
-          return;
-        }
-
-        errorText.innerText = '';
-        await onAuthSuccess(username);
-      } catch (error) {
-        errorText.innerText = 'Auth error';
-        console.log(error);
+      const validationError = validateUsername(username);
+      if (validationError) {
+        errorText.innerText = validationError;
+        return;
       }
-    });
+
+      if (!/^\d{6}$/.test(accessCode)) {
+        errorText.innerText = 'Code must be 6 digits';
+        return;
+      }
+
+      errorText.innerText = '';
+      await onAuthSuccess(username, accessCode);
+    } catch (error) {
+      errorText.innerText = 'Auth error';
+      console.log(error);
+    }
   });
 };
 
@@ -138,7 +133,7 @@ export const initLoggedInHeader = ({ root, storedUser, onProfileClick }) => {
 
   const title = document.createElement('h1');
   title.classList.add('chat-title');
-  title.innerText = 'The CSS Whisperer';
+  title.innerText = 'Chat Room';
 
   const status = document.createElement('span');
   status.classList.add('chat-status');
@@ -214,17 +209,23 @@ export const openProfileModal = ({
   pictureButtons.appendChild(changePictureBtn);
   pictureButtons.appendChild(deletePictureBtn);
 
-  const nameLabel = document.createElement('p');
-  nameLabel.classList.add('name-label');
-  nameLabel.innerText = 'Enter your name';
-
   const nameInput = document.createElement('input');
   nameInput.classList.add('name-input');
+  nameInput.placeholder = 'Enter your name';
   nameInput.type = 'text';
   nameInput.value = storedUser?.username || '';
 
   const errorText = document.createElement('p');
   errorText.classList.add('auth-error');
+
+  const accessInput = document.createElement('input');
+  accessInput.classList.add('name-input');
+  accessInput.placeholder = 'Enter your access code';
+  accessInput.type = 'text';
+  accessInput.value = storedUser?.access_code || '';
+
+  const errorCode = document.createElement('p');
+  errorCode.classList.add('auth-error');
 
   const joinBtn = document.createElement('button');
   joinBtn.classList.add('join-button');
@@ -244,9 +245,10 @@ export const openProfileModal = ({
   dialog.appendChild(titlePicture);
   dialog.appendChild(profileImage);
   dialog.appendChild(pictureButtons);
-  dialog.appendChild(nameLabel);
   dialog.appendChild(nameInput);
   dialog.appendChild(errorText);
+  dialog.appendChild(accessInput);
+  dialog.appendChild(errorCode);
   dialog.appendChild(joinBtn);
   dialog.appendChild(closeBtn);
   dialog.appendChild(logoutBtn);

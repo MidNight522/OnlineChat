@@ -389,6 +389,37 @@ app.delete('/message/:uuid', (req, res) => __awaiter(void 0, void 0, void 0, fun
             .json({ error: 'Internal server error', detail: err === null || err === void 0 ? void 0 : err.message });
     }
 }));
+app.post('/auth', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { username, accessCode } = req.body;
+        const usernameTrimmed = String(username || '').trim();
+        const accessCodeTrimmed = String(accessCode || '').trim();
+        if (!usernameTrimmed || !accessCodeTrimmed) {
+            throw new Error('Username and code required');
+        }
+        if (!/^\d{6}$/.test(accessCodeTrimmed)) {
+            throw new Error('Code must be 6 digits');
+        }
+        const { rows: users } = yield pool.query(`SELECT * FROM users WHERE username = $1`, [usernameTrimmed]);
+        if (users.length === 0) {
+            const { rows: newUsers } = yield pool.query(`INSERT INTO users (username, access_code)
+         VALUES ($1, $2)
+         RETURNING *`, [usernameTrimmed, accessCodeTrimmed]);
+            return res.json({ user: newUsers[0] });
+        }
+        const user = users[0];
+        if (!user.access_code) {
+            throw new Error('User has no code. Please re-register');
+        }
+        if (String(user.access_code) !== String(accessCodeTrimmed)) {
+            throw new Error('Wrong code');
+        }
+        res.json({ user });
+    }
+    catch (error) {
+        res.status(400).json({ error: { message: error.message } });
+    }
+}));
 init().then(() => {
     app.listen(PORT, () => {
         // test();

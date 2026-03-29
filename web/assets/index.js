@@ -259,18 +259,12 @@ const initFetchMessages = async () => {
 if (!storedUser) {
   initAuthUi({
     root: appContainer,
-    onAuthSuccess: async (username) => {
-      let response = await fetch(
-        `/api/user?username=${encodeURIComponent(username)}`,
-      );
-
-      if (!response.ok) {
-        response = await fetch('/api/user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username }),
-        });
-      }
+    onAuthSuccess: async (username, accessCode) => {
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, accessCode }),
+      });
 
       const data = await response.json();
 
@@ -362,5 +356,5 @@ if (!storedUser) {
 // start
 if (storedUser) {
   initFetchMessages();
-  // setInterval(initFetchMessages, 3000);
+  setInterval(initFetchMessages, 3000);
 }

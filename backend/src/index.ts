@@ -463,6 +463,52 @@ app.delete(
   },
 );
 
+app.post('/auth', async (req, res) => {
+  try {
+    const { username, accessCode } = req.body;
+
+    const usernameTrimmed = String(username || '').trim();
+    const accessCodeTrimmed = String(accessCode || '').trim();
+
+    if (!usernameTrimmed || !accessCodeTrimmed) {
+      throw new Error('Username and code required');
+    }
+
+    if (!/^\d{6}$/.test(accessCodeTrimmed)) {
+      throw new Error('Code must be 6 digits');
+    }
+
+    const { rows: users } = await pool.query(
+      `SELECT * FROM users WHERE username = $1`,
+      [usernameTrimmed],
+    );
+
+    if (users.length === 0) {
+      const { rows: newUsers } = await pool.query(
+        `INSERT INTO users (username, access_code)
+         VALUES ($1, $2)
+         RETURNING *`,
+        [usernameTrimmed, accessCodeTrimmed],
+      );
+
+      return res.json({ user: newUsers[0] });
+    }
+
+    const user = users[0];
+
+    if (!user.access_code) {
+      throw new Error('User has no code. Please re-register');
+    }
+
+    if (String(user.access_code) !== String(accessCodeTrimmed)) {
+      throw new Error('Wrong code');
+    }
+
+    res.json({ user });
+  } catch (error: any) {
+    res.status(400).json({ error: { message: error.message } });
+  }
+});
 init().then(() => {
   app.listen(PORT, () => {
     // test();
