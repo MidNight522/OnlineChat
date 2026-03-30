@@ -81,6 +81,9 @@ const init = () => {
 				  );
 				`);
                     yield pool.query(`
+          ALTER TABLE public.users
+          ADD COLUMN IF NOT EXISTS access_code varchar(6)`);
+                    yield pool.query(`
 				  CREATE TABLE IF NOT EXISTS public.messages (
 				    uuid         uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
 				    content      text        NOT NULL,
@@ -134,7 +137,10 @@ const init = () => {
             yield initDB();
             return resolve(true);
         }))
-            .catch(() => reject());
+            .catch((error) => {
+            console.error('Database init error:', error);
+            reject(error);
+        });
     });
 };
 app.get('/users', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -422,9 +428,14 @@ app.post('/auth', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.status(400).json({ error: { message: error.message } });
     }
 }));
-init().then(() => {
+init()
+    .then(() => {
     app.listen(PORT, () => {
         // test();
         console.log('APP IS RUNNING ON PORT: ' + PORT);
     });
+})
+    .catch((error) => {
+    console.error('Startup failed:', error);
+    process.exit(1);
 });
