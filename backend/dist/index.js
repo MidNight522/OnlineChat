@@ -143,6 +143,9 @@ const init = () => {
         });
     });
 };
+app.get('/', (req, res) => {
+    res.send('SERVER WORKS');
+});
 app.get('/users', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { rows: users } = yield pool.query(`SELECT * FROM users`);
@@ -428,6 +431,8 @@ app.post('/auth', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.status(400).json({ error: { message: error.message } });
     }
 }));
+console.log('Starting app...');
+console.log('DB_NAME:', process.env.DB_NAME);
 init()
     .then(() => {
     app.listen(PORT, () => {
