@@ -31,6 +31,10 @@ require('dotenv').config();
 const app = (0, express_1.default)();
 app.use(body_parser_1.default.json());
 app.use((0, cors_1.default)());
+app.use('/uploads', express_1.default.static(uploadPath));
+app.get('/', (req, res) => {
+    res.send('SERVER WORKS');
+});
 const PORT = process.env.PORT || 3001;
 const pool = new pg_1.Pool({
     host: process.env.DB_HOST,
@@ -143,9 +147,6 @@ const init = () => {
         });
     });
 };
-app.get('/', (req, res) => {
-    res.send('SERVER WORKS');
-});
 app.get('/users', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { rows: users } = yield pool.query(`SELECT * FROM users`);
@@ -434,12 +435,13 @@ app.post('/auth', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 console.log('Starting app...');
 console.log('DB_NAME:', process.env.DB_NAME);
 init()
-    .then(() => {
+    .then(() => __awaiter(void 0, void 0, void 0, function* () {
+    yield promises_1.default.mkdir(uploadPath, { recursive: true });
     app.listen(PORT, () => {
         // test();
         console.log('APP IS RUNNING ON PORT: ' + PORT);
     });
-})
+}))
     .catch((error) => {
     console.error('Startup failed:', error);
     process.exit(1);
