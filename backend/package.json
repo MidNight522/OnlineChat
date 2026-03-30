@@ -12,14 +12,18 @@
   "description": "",
   "dependencies": {
     "body-parser": "^2.2.0",
+    "cors": "^2.8.6",
     "crypto": "^1.0.1",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "from": "^0.1.7",
+    "import": "^0.0.6",
     "multer": "^2.0.2",
     "pg": "^8.16.3",
     "sharp": "^0.34.4"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/multer": "^2.0.0",
     "@types/pg": "^8.15.5"

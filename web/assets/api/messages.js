@@ -1,5 +1,7 @@
+import { API_BASE_URL } from './config.js';
+
 export const fetchMessages = async () => {
-  const res = await fetch('/api/messages');
+  const res = await fetch(`${API_BASE_URL}/messages`);
   if (!res.ok) {
     throw new Error('Failed to fetch messages');
   }
@@ -8,7 +10,7 @@ export const fetchMessages = async () => {
 };
 
 export const createMessage = async ({ username, content }) => {
-  const response = await fetch('/api/message', {
+  const response = await fetch(`${API_BASE_URL}/message`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, content }),
@@ -23,7 +25,7 @@ export const createMessage = async ({ username, content }) => {
 };
 
 export const updateMessage = async ({ uuid, username, content }) => {
-  const response = await fetch(`/api/message/${uuid}`, {
+  const response = await fetch(`${API_BASE_URL}/message/${uuid}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, content }),
@@ -38,7 +40,7 @@ export const updateMessage = async ({ uuid, username, content }) => {
 };
 
 export const deleteMessage = async ({ uuid, username }) => {
-  const response = await fetch(`/api/message/${uuid}`, {
+  const response = await fetch(`${API_BASE_URL}/message/${uuid}`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username }),

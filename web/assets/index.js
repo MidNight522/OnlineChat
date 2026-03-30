@@ -1,3 +1,4 @@
+import { API_BASE_URL } from './api/config.js';
 import {
   fetchMessages,
   createMessage,
@@ -260,7 +261,7 @@ if (!storedUser) {
   initAuthUi({
     root: appContainer,
     onAuthSuccess: async (username, accessCode) => {
-      const response = await fetch('/api/auth', {
+      const response = await fetch(`${API_BASE_URL}/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, accessCode }),

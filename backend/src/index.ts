@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import cors from 'cors';
 import bodyParser from 'body-parser';
 import path from 'path';
 import fs from 'fs/promises';
@@ -20,8 +21,9 @@ require('dotenv').config();
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cors());
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3001;
 
 const pool = new Pool({
   host: process.env.DB_HOST,

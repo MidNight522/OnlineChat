@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const path_1 = __importDefault(require("path"));
 const promises_1 = __importDefault(require("fs/promises"));
@@ -29,7 +30,8 @@ const sha256 = (buf) => crypto_1.default.createHash('sha256').update(buf).digest
 require('dotenv').config();
 const app = (0, express_1.default)();
 app.use(body_parser_1.default.json());
-const PORT = process.env.PORT;
+app.use((0, cors_1.default)());
+const PORT = process.env.PORT || 3001;
 const pool = new pg_1.Pool({
     host: process.env.DB_HOST,
     port: parseInt(process.env.DB_PORT || ''),

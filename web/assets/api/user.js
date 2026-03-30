@@ -1,9 +1,11 @@
+import { API_BASE_URL } from './config.js';
+
 export const updateUserAvatar = async ({ username, file }) => {
   const formData = new FormData();
   formData.append('username', username);
   formData.append('avatar', file);
 
-  const response = await fetch('/api/user', {
+  const response = await fetch(`${API_BASE_URL}/user`, {
     method: 'PATCH',
     body: formData,
   });
@@ -17,7 +19,7 @@ export const updateUserAvatar = async ({ username, file }) => {
 };
 
 export const deleteUserAvatar = async ({ username }) => {
-  const response = await fetch('/api/user/avatar', {
+  const response = await fetch(`${API_BASE_URL}/user/avatar`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
