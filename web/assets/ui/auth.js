@@ -151,7 +151,9 @@ export const initLoggedInHeader = ({ root, storedUser, onProfileClick }) => {
   profileBtn.classList.add('profile-icon-button');
 
   const icon = document.createElement('img');
-  icon.src = storedUser?.avatar || '/assets/images/ProfileInfo.svg';
+  icon.src = storedUser?.avatar
+    ? `${API_BASE_URL}${storedUser.avatar}`
+    : '/assets/images/ProfileInfo.svg';
   icon.alt = 'Profile';
 
   profileBtn.appendChild(icon);
