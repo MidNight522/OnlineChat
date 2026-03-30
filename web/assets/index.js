@@ -306,8 +306,21 @@ if (!storedUser) {
           document.location.reload();
         },
 
-        onJoin: async (username) => {
-          console.log('New username:', username);
+        onJoin: async (username, accessCode) => {
+          const response = await fetch(`${API_BASE_URL}/auth`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, accessCode }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.user) {
+            throw new Error(data?.error?.message || 'Auth failed');
+          }
+
+          localStorage.setItem('user', JSON.stringify(data.user));
+          document.location.reload();
         },
 
         onChangePicture: () => {

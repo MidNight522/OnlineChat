@@ -36,6 +36,7 @@ export const initAuthUi = ({ root, onAuthSuccess }) => {
   const inputForAuth = document.createElement('input');
   inputForAuth.classList.add('auth-input');
   inputForAuth.placeholder = 'Enter username';
+
   const codeInput = document.createElement('input');
   codeInput.classList.add('auth-input');
   codeInput.placeholder = 'Enter 6-digit code';
@@ -227,7 +228,7 @@ export const openProfileModal = ({
   accessInput.classList.add('name-input');
   accessInput.placeholder = 'Enter your access code';
   accessInput.type = 'text';
-  accessInput.value = storedUser?.access_code || '';
+  accessInput.maxLength = 6;
 
   const errorCode = document.createElement('p');
   errorCode.classList.add('auth-error');
@@ -282,6 +283,7 @@ export const openProfileModal = ({
   joinBtn.addEventListener('click', async () => {
     try {
       const username = nameInput.value.trim();
+      const accessCode = accessInput.value.trim();
 
       if (!username) {
         errorText.innerText = 'Username is required';
@@ -298,8 +300,14 @@ export const openProfileModal = ({
         return;
       }
 
+      if (!/^\d{6}$/.test(accessCode)) {
+        errorCode.innerText = 'Code must be 6 digits';
+        return;
+      }
+
       errorText.innerText = '';
-      await onJoin?.(username);
+      errorCode.innerText = '';
+      await onJoin?.(username, accessCode);
       root.removeChild(dialogWrapper);
     } catch (error) {
       errorText.innerText = 'Profile update error';
