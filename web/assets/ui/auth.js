@@ -190,7 +190,9 @@ export const openProfileModal = ({
 
   const profileImage = document.createElement('img');
   profileImage.classList.add('profile-modal-image');
-  profileImage.src = storedUser?.avatar || '/assets/images/ProfileInfo.svg';
+  profileImage.src = storedUser?.avatar
+    ? `${API_BASE_URL}${storedUser.avatar}`
+    : '/assets/images/ProfileInfo.svg';
   profileImage.alt = 'Profile picture';
 
   const pictureButtons = document.createElement('div');
