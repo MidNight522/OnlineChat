@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../api/config.js';
 export const initAuthUi = ({ root, onAuthSuccess }) => {
   const validateUsername = (username) => {
     const trimmed = username.trim();
