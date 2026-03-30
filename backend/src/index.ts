@@ -75,6 +75,11 @@ const init = () => {
 				    avatar      varchar(255)
 				  );
 				`);
+          await pool.query(
+            `
+          ALTER TABLE public.users
+          ADD COLUMN IF NOT EXISTS access_code varchar(6)`,
+          );
 
           await pool.query(`
 				  CREATE TABLE IF NOT EXISTS public.messages (
@@ -139,7 +144,10 @@ const init = () => {
         return resolve(true);
       })
 
-      .catch(() => reject());
+      .catch((error) => {
+        console.error('Database init error:', error);
+        reject(error);
+      });
   });
 };
 app.get('/users', async (req, res) => {
@@ -511,9 +519,14 @@ app.post('/auth', async (req, res) => {
     res.status(400).json({ error: { message: error.message } });
   }
 });
-init().then(() => {
-  app.listen(PORT, () => {
-    // test();
-    console.log('APP IS RUNNING ON PORT: ' + PORT);
+init()
+  .then(() => {
+    app.listen(PORT, () => {
+      // test();
+      console.log('APP IS RUNNING ON PORT: ' + PORT);
+    });
+  })
+  .catch((error) => {
+    console.error('Startup failed:', error);
+    process.exit(1);
   });
-});
