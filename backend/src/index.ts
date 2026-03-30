@@ -23,6 +23,12 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
+app.use('/uploads', express.static(uploadPath));
+
+app.get('/', (req, res) => {
+  res.send('SERVER WORKS');
+});
+
 const PORT = process.env.PORT || 3001;
 
 const pool = new Pool({
@@ -150,9 +156,6 @@ const init = () => {
       });
   });
 };
-app.get('/', (req, res) => {
-  res.send('SERVER WORKS');
-});
 
 app.get('/users', async (req, res) => {
   try {
@@ -526,7 +529,8 @@ app.post('/auth', async (req, res) => {
 console.log('Starting app...');
 console.log('DB_NAME:', process.env.DB_NAME);
 init()
-  .then(() => {
+  .then(async () => {
+    await fs.mkdir(uploadPath, { recursive: true });
     app.listen(PORT, () => {
       // test();
       console.log('APP IS RUNNING ON PORT: ' + PORT);
