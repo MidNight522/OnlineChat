@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../api/config.js';
 import { formatTime } from '../utils/date.js';
 
 export const createMessageElement = ({
@@ -34,7 +35,9 @@ export const createMessageElement = ({
     messageAvatarImg.classList.add('message-avatar');
     messageAvatarImg.setAttribute(
       'src',
-      message.avatar || '/assets/images/ProfileInfo.svg',
+      message.avatar
+        ? `${API_BASE_URL}${message.avatar}`
+        : '/assets/images/ProfileInfo.svg',
     );
     messageAvatarImg.setAttribute('width', 32);
     messageAvatarImg.setAttribute('height', 32);
