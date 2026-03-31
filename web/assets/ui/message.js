@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../api/config.js';
+import { getAvatarUrl } from '../utils/avatarFallBack.js';
 import { formatTime } from '../utils/date.js';
 
 export const createMessageElement = ({
@@ -33,17 +34,7 @@ export const createMessageElement = ({
     // avatar
     const messageAvatarImg = document.createElement('img');
     messageAvatarImg.classList.add('message-avatar');
-    // messageAvatarImg.setAttribute(
-    //   'src',
-    //   message.avatar
-    //     ? `${API_BASE_URL}${message.avatar}`
-    //     : '/assets/images/ProfileInfo.svg',
-    //   (messageAvatarImg.onerror = () => {
-    //     messageAvatarImg.onerror = null;
-    //     messageAvatarImg.src = '/assets/images/ProfileInfo.svg';
-    //   }),
-    // );
-    messageAvatarImg.src = message.avatar || '/assets/images/ProfileInfo.svg';
+    messageAvatarImg.src = getAvatarUrl(message.avatar, API_BASE_URL);
 
     messageAvatarImg.onerror = () => {
       messageAvatarImg.onerror = null;

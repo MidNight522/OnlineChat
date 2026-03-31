@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../api/config.js';
+import { getAvatarUrl } from '../utils/avatarFallBack.js';
 export const initAuthUi = ({ root, onAuthSuccess }) => {
   const validateUsername = (username) => {
     const trimmed = username.trim();
@@ -152,13 +153,11 @@ export const initLoggedInHeader = ({ root, storedUser, onProfileClick }) => {
   profileBtn.classList.add('profile-icon-button');
 
   const icon = document.createElement('img');
-  icon.src = storedUser?.avatar || '/assets/images/ProfileInfo.svg';
+  icon.src = getAvatarUrl(storedUser?.avatar, API_BASE_URL);
   icon.onerror = () => {
     icon.onerror = null;
     icon.src = '/assets/images/ProfileInfo.svg';
   };
-  // ? `${API_BASE_URL}${storedUser.avatar}`
-  // : '/assets/images/ProfileInfo.svg';
   icon.alt = 'Profile';
 
   profileBtn.appendChild(icon);
@@ -198,7 +197,7 @@ export const openProfileModal = ({
 
   const profileImage = document.createElement('img');
   profileImage.classList.add('profile-modal-image');
-  profileImage.src = storedUser?.avatar || '/assets/images/ProfileInfo.svg';
+  profileImage.src = getAvatarUrl(storedUser?.avatar, API_BASE_URL);
   profileImage.onerror = () => {
     profileImage.onerror = null;
     profileImage.src = '/assets/images/ProfileInfo.svg';
