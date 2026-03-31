@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const cloudinary_1 = require("cloudinary");
 const cors_1 = __importDefault(require("cors"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const path_1 = __importDefault(require("path"));
@@ -28,6 +29,32 @@ const upload = (0, multer_1.default)({
 });
 const sha256 = (buf) => crypto_1.default.createHash('sha256').update(buf).digest('hex');
 require('dotenv').config();
+cloudinary_1.v2.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_APY_SECRET,
+});
+const uploadBufferToCloudinary = (buffer, publicId) => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary_1.v2.uploader.upload_stream({
+            folder: 'chat-avatars',
+            public_id: publicId,
+            resource_type: 'image',
+            overwrite: true,
+        }, (error, result) => {
+            if (error) {
+                reject(error);
+                return;
+            }
+            if (!(result === null || result === void 0 ? void 0 : result.secure_url)) {
+                reject(new Error('Cloudinary upload failed'));
+                return;
+            }
+            resolve(result.secure_url);
+        });
+        stream.end(buffer);
+    });
+};
 const app = (0, express_1.default)();
 app.use(body_parser_1.default.json());
 app.use((0, cors_1.default)());
@@ -181,11 +208,16 @@ app.post('/user', upload.single('avatar'), (req, res) => __awaiter(void 0, void 
             const { path: tmpPath } = req.file;
             const buf = yield promises_1.default.readFile(tmpPath);
             const hash = sha256(buf);
-            const fileName = `user_${username}_${hash}.webp`;
-            const finalPath = path_1.default.join(uploadPath, fileName);
-            yield (0, sharp_1.default)(buf).resize(512).webp({ quality: 95 }).toFile(finalPath);
+            const processedBuffer = yield (0, sharp_1.default)(buf)
+                .resize(512)
+                .webp({ quality: 95 })
+                .toBuffer();
+            // const fileName = `user_${username}_${hash}.webp`;
+            // const finalPath = path.join(uploadPath, fileName);
+            // await sharp(buf).resize(512).webp({ quality: 95 }).toFile(finalPath);
             yield promises_1.default.rm(tmpPath, { force: true });
-            pathForDB = `/uploads/${fileName}`;
+            const publicId = `user_${username}_${hash}`;
+            pathForDB = yield uploadBufferToCloudinary(processedBuffer, publicId);
         }
         yield pool.query(`INSERT INTO users (username, avatar) VALUES($1, $2)`, [
             username,
@@ -210,11 +242,16 @@ app.patch('/user', upload.single('avatar'), (req, res) => __awaiter(void 0, void
             const { path: tmpPath } = req.file;
             const buf = yield promises_1.default.readFile(tmpPath);
             const hash = sha256(buf);
-            const fileName = `user_${username}_${hash}.webp`;
-            const finalPath = path_1.default.join(uploadPath, fileName);
-            yield (0, sharp_1.default)(buf).resize(512).webp({ quality: 95 }).toFile(finalPath);
+            const processBuffer = yield (0, sharp_1.default)(buf)
+                .resize(512)
+                .webp({ quality: 95 })
+                .toBuffer();
+            // const fileName = `user_${username}_${hash}.webp`;
+            // const finalPath = path.join(uploadPath, fileName);
+            // await sharp(buf).resize(512).webp({ quality: 95 }).toFile(finalPath);
             yield promises_1.default.rm(tmpPath, { force: true });
-            pathForDB = `/uploads/${fileName}`;
+            const publicId = `user_${username}_${hash}`;
+            pathForDB = yield uploadBufferToCloudinary(processBuffer, publicId);
         }
         yield pool.query(`UPDATE users SET avatar = $1 WHERE username = $2`, [
             pathForDB,

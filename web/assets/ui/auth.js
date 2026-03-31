@@ -152,9 +152,13 @@ export const initLoggedInHeader = ({ root, storedUser, onProfileClick }) => {
   profileBtn.classList.add('profile-icon-button');
 
   const icon = document.createElement('img');
-  icon.src = storedUser?.avatar
-    ? `${API_BASE_URL}${storedUser.avatar}`
-    : '/assets/images/ProfileInfo.svg';
+  icon.src = storedUser?.avatar || '/assets/images/ProfileInfo.svg';
+  icon.onerror = () => {
+    icon.onerror = null;
+    icon.src = '/assets/images/ProfileInfo.svg';
+  };
+  // ? `${API_BASE_URL}${storedUser.avatar}`
+  // : '/assets/images/ProfileInfo.svg';
   icon.alt = 'Profile';
 
   profileBtn.appendChild(icon);
@@ -194,9 +198,13 @@ export const openProfileModal = ({
 
   const profileImage = document.createElement('img');
   profileImage.classList.add('profile-modal-image');
-  profileImage.src = storedUser?.avatar
-    ? `${API_BASE_URL}${storedUser.avatar}`
-    : '/assets/images/ProfileInfo.svg';
+  profileImage.src = storedUser?.avatar || '/assets/images/ProfileInfo.svg';
+  profileImage.onerror = () => {
+    profileImage.onerror = null;
+    profileImage.src = '/assets/images/ProfileInfo.svg';
+  };
+  // ? `${API_BASE_URL}${storedUser.avatar}`
+  // : '/assets/images/ProfileInfo.svg';
   profileImage.alt = 'Profile picture';
 
   const pictureButtons = document.createElement('div');

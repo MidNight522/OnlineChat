@@ -33,16 +33,22 @@ export const createMessageElement = ({
     // avatar
     const messageAvatarImg = document.createElement('img');
     messageAvatarImg.classList.add('message-avatar');
-    messageAvatarImg.setAttribute(
-      'src',
-      message.avatar
-        ? `${API_BASE_URL}${message.avatar}`
-        : '/assets/images/ProfileInfo.svg',
-      (messageAvatarImg.onerror = () => {
-        messageAvatarImg.onerror = null;
-        messageAvatarImg.src = '/assets/images/ProfileInfo.svg';
-      }),
-    );
+    // messageAvatarImg.setAttribute(
+    //   'src',
+    //   message.avatar
+    //     ? `${API_BASE_URL}${message.avatar}`
+    //     : '/assets/images/ProfileInfo.svg',
+    //   (messageAvatarImg.onerror = () => {
+    //     messageAvatarImg.onerror = null;
+    //     messageAvatarImg.src = '/assets/images/ProfileInfo.svg';
+    //   }),
+    // );
+    messageAvatarImg.src = message.avatar || '/assets/images/ProfileInfo.svg';
+
+    messageAvatarImg.onerror = () => {
+      messageAvatarImg.onerror = null;
+      messageAvatarImg.src = '/assets/images/ProfileInfo.svg';
+    };
     messageAvatarImg.setAttribute('width', 32);
     messageAvatarImg.setAttribute('height', 32);
 

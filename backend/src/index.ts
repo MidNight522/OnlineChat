@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import { v2 as cloudinary } from 'cloudinary';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import path from 'path';
@@ -18,6 +19,40 @@ const sha256 = (buf: Buffer) =>
   crypto.createHash('sha256').update(buf).digest('hex');
 
 require('dotenv').config();
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_APY_SECRET,
+});
+
+const uploadBufferToCloudinary = (
+  buffer: Buffer,
+  publicId: string,
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: 'chat-avatars',
+        public_id: publicId,
+        resource_type: 'image',
+        overwrite: true,
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        if (!result?.secure_url) {
+          reject(new Error('Cloudinary upload failed'));
+          return;
+        }
+        resolve(result.secure_url);
+      },
+    );
+
+    stream.end(buffer);
+  });
+};
 
 const app = express();
 app.use(bodyParser.json());
@@ -200,12 +235,18 @@ app.post('/user', upload.single('avatar'), async (req, res) => {
       const { path: tmpPath } = req.file;
       const buf = await fs.readFile(tmpPath);
       const hash = sha256(buf);
-      const fileName = `user_${username}_${hash}.webp`;
-      const finalPath = path.join(uploadPath, fileName);
-      await sharp(buf).resize(512).webp({ quality: 95 }).toFile(finalPath);
+
+      const processedBuffer = await sharp(buf)
+        .resize(512)
+        .webp({ quality: 95 })
+        .toBuffer();
+      // const fileName = `user_${username}_${hash}.webp`;
+      // const finalPath = path.join(uploadPath, fileName);
+      // await sharp(buf).resize(512).webp({ quality: 95 }).toFile(finalPath);
       await fs.rm(tmpPath, { force: true });
 
-      pathForDB = `/uploads/${fileName}`;
+      const publicId = `user_${username}_${hash}`;
+      pathForDB = await uploadBufferToCloudinary(processedBuffer, publicId);
     }
     await pool.query(`INSERT INTO users (username, avatar) VALUES($1, $2)`, [
       username,
@@ -232,18 +273,24 @@ app.patch('/user', upload.single('avatar'), async (req, res) => {
       [username],
     );
     if (!users[0]) throw new Error(`User not found`);
+
     let pathForDB = null;
 
     if (req.file) {
       const { path: tmpPath } = req.file;
       const buf = await fs.readFile(tmpPath);
       const hash = sha256(buf);
-      const fileName = `user_${username}_${hash}.webp`;
-      const finalPath = path.join(uploadPath, fileName);
-      await sharp(buf).resize(512).webp({ quality: 95 }).toFile(finalPath);
+      const processBuffer = await sharp(buf)
+        .resize(512)
+        .webp({ quality: 95 })
+        .toBuffer();
+      // const fileName = `user_${username}_${hash}.webp`;
+      // const finalPath = path.join(uploadPath, fileName);
+      // await sharp(buf).resize(512).webp({ quality: 95 }).toFile(finalPath);
       await fs.rm(tmpPath, { force: true });
 
-      pathForDB = `/uploads/${fileName}`;
+      const publicId = `user_${username}_${hash}`;
+      pathForDB = await uploadBufferToCloudinary(processBuffer, publicId);
     }
 
     await pool.query(`UPDATE users SET avatar = $1 WHERE username = $2`, [
