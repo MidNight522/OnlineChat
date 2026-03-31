@@ -125,6 +125,8 @@ Running the Project Locally
    git clone <your-repository-url>
    cd <your-project-folder>
 2. Configure environment variables
+3. Uncomment the line in the config.js file located at web/assets/api, and second comment
+4. Comment window sccript in index.html
 
 Create and fill .env files for:
 
