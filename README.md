@@ -10,37 +10,37 @@ Built as a real-world project focusing on clean architecture, user experience, a
 
 ## 🚀 Key Features
 
-- Authentication with username + 6-digit access code
-- Create, edit, and delete messages
-- Message editing indicator
-- Avatar upload and removal
-- Profile management modal
-- Emoji picker and rich text formatting
-- Auto-scroll and smooth UI interactions
-- Date grouping for messages
+- Authentication with username + 6-digit access code  
+- Create, edit, and delete messages  
+- Message editing indicator  
+- Avatar upload and removal  
+- Profile management modal  
+- Emoji picker and rich text formatting  
+- Auto-scroll and smooth UI interactions  
+- Date grouping for messages  
 
 ---
 
 ## 🛠 Tech Stack
 
 **Frontend**
-- Vanilla JavaScript
-- HTML / CSS
+- Vanilla JavaScript  
+- HTML / CSS  
 
 **Backend**
-- Node.js (Express)
-- TypeScript
-- Multer (file uploads)
-- Sharp (image processing)
+- Node.js (Express)  
+- TypeScript  
+- Multer (file uploads)  
+- Sharp (image processing)  
 
 **Database**
-- PostgreSQL
+- PostgreSQL  
 
 **Infrastructure**
-- Docker
-- Docker Compose
-- Nginx
-- Deployed on Render
+- Docker  
+- Docker Compose  
+- Nginx  
+- Deployed on Render  
 
 ---
 
@@ -157,14 +157,6 @@ If backend changes do not apply immediately, rebuild the containers:
 
 docker compose down
 docker compose up --build
-Future Improvements
-WebSocket instead of polling
-Better text formatting preview
-Safer HTML sanitization
-Message reactions
-Typing indicator
-Private chats
-Mobile UX improvements
 ```
 ## 🔮 Future Improvements
 
