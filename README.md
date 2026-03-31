@@ -1,57 +1,59 @@
-# Chat Room
+# Real-Time Chat Application (Full-Stack)
 
-A full-stack real-time style chat application with user profiles, avatars, message editing, formatting toolbar, emoji picker, and PostgreSQL persistence.
+Live Demo: https://onlinechat-1-k78x.onrender.com
 
-## Features
+A full-stack chat application with user authentication, avatar management, and PostgreSQL persistence.
 
-- Username + 6-digit access code authentication
-- Public chat interface
-- Create, edit, and delete messages
-- Edited message indicator
-- Date separators for messages
-- Auto-scroll with scroll-to-bottom button
-- User avatar upload and delete
-- Profile modal
-- Emoji picker
-- Rich text toolbar:
-  - bold
-  - italic
-  - underline
-  - strike
-  - subscript
-  - superscript
-  - ordered list
-  - unordered list
-  - image
-  - link
-  - quote
-  - code
-  - clean formatting
+Built as a real-world project focusing on clean architecture, user experience, and production-ready deployment.
 
-## Tech Stack
+---
 
-### Frontend
+## 🚀 Key Features
 
-- Vanilla JavaScript
-- HTML
-- CSS
+- Authentication with username + 6-digit access code  
+- Create, edit, and delete messages  
+- Message editing indicator  
+- Avatar upload and removal  
+- Profile management modal  
+- Emoji picker and rich text formatting  
+- Auto-scroll and smooth UI interactions  
+- Date grouping for messages  
 
-### Backend
+---
 
-- Node.js
-- Express
-- TypeScript
-- Multer
-- Sharp
-- PostgreSQL
+## 🛠 Tech Stack
 
-### Infrastructure
+**Frontend**
+- Vanilla JavaScript  
+- HTML / CSS  
 
-- Docker
-- Docker Compose
-- Nginx
+**Backend**
+- Node.js (Express)  
+- TypeScript  
+- Multer (file uploads)  
+- Sharp (image processing)  
 
-## Project Structure
+**Database**
+- PostgreSQL  
+
+**Infrastructure**
+- Docker  
+- Docker Compose  
+- Nginx  
+- Deployed on Render  
+
+---
+
+## 🧠 What I Focused On
+
+- Building a complete full-stack application from scratch  
+- Designing a clean and maintainable backend structure  
+- Handling real-world features like file uploads and user data  
+- Deploying and debugging a production environment  
+
+---
+
+## 📦 Project Structure
 
 ```text
 .
@@ -118,12 +120,15 @@ content
 author_uuid
 created_at
 updated_at
-Running the Project Locally
+
+## ⚙️ Running Locally
 
 1. Clone the repository
    git clone <your-repository-url>
    cd <your-project-folder>
 2. Configure environment variables
+3. Uncomment the line in the config.js file located at web/assets/api, and second comment
+4. Comment window sccript in index.html
 
 Create and fill .env files for:
 
@@ -152,15 +157,17 @@ If backend changes do not apply immediately, rebuild the containers:
 
 docker compose down
 docker compose up --build
-Future Improvements
-WebSocket instead of polling
-Better text formatting preview
-Safer HTML sanitization
-Message reactions
-Typing indicator
-Private chats
-Mobile UX improvements
-Author
+```
+## 🔮 Future Improvements
+
+- WebSocket instead of polling
+- Message reactions
+- Typing indicator
+- Private chats
+- Improved mobile UX
+
+---
+
+## 👤 Author
 
 Kirill Laine
-```
